@@ -50,7 +50,7 @@ class CoreMLService: CoreMLServiceProtocol {
     ]
 
     init() throws {
-        guard let modelURL = Bundle.main.url(forResource: "EfficientNet_Lite0", withExtension: "mlmodelc") else {
+        guard let modelURL = Bundle.main.url(forResource: "efficientnet_lite4", withExtension: "mlmodelc") else {
             throw CoreMLError.modelLoadingFailed
         }
         let compiledModel = try MLModel(contentsOf: modelURL)
