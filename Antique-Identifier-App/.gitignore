@@ -1,0 +1,22 @@
+# Xcode
+.DS_Store
+*.xcodeproj
+*.xcworkspace
+*.playground
+*.xcarchive
+*.xccheckout
+*.build
+*.bak
+*.mode1v3
+*.xcuserstate
+*.moved-aside
+DerivedData/
+
+# Swift Package Manager
+.swiftpm/
+
+# SwiftData
+*.store
+
+# Gemini
+GEMINI.md
