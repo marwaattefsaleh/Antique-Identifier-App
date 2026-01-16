@@ -58,7 +58,8 @@ class CoreMLService: CoreMLServiceProtocol {
     }
 
     func classify(image: UIImage) throws -> ClassificationResult {
-        guard let ciImage = CIImage(image: image) else {
+        guard let resizedImage = image.resize(to: CGSize(width: 224, height: 224)),
+              let pixelBuffer = resizedImage.toCVPixelBuffer() else {
             throw CoreMLError.imageProcessingFailed
         }
 
@@ -75,7 +76,7 @@ class CoreMLService: CoreMLServiceProtocol {
             }
         }
 
-        let handler = VNImageRequestHandler(ciImage: ciImage)
+        let handler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer)
         try handler.perform([request])
         
         if classifications.isEmpty {

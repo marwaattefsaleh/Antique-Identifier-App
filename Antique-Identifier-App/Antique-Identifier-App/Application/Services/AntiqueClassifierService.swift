@@ -24,7 +24,8 @@ class AntiqueClassifierService: AntiqueClassifierServiceProtocol {
     }
     
     func classify(image: UIImage) throws -> BinaryClassificationResult {
-        guard let ciImage = CIImage(image: image) else {
+        guard let resizedImage = image.resize(to: CGSize(width: 224, height: 224)),
+              let pixelBuffer = resizedImage.toCVPixelBuffer() else {
             throw CoreMLError.imageProcessingFailed
         }
 
@@ -39,7 +40,7 @@ class AntiqueClassifierService: AntiqueClassifierServiceProtocol {
             }
         }
 
-        let handler = VNImageRequestHandler(ciImage: ciImage)
+        let handler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer)
         try handler.perform([request])
         
         guard let result = classificationResult else {
