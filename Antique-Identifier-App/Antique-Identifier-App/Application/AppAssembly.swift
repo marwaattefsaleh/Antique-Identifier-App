@@ -17,15 +17,19 @@ struct AppAssembly: Assembly {
         container.register(CoreMLServiceProtocol.self) { _ in
             try! CoreMLService()
         }.inObjectScope(.container)
+        
+        container.register(AntiqueAnalyzerProtocol.self) { _ in
+            AntiqueAnalyzer()
+        }.inObjectScope(.container)
 
         container.register(MainViewModel.self) { r in
-            MainViewModel(coreMLService: r.resolve(CoreMLServiceProtocol.self)!)
+            MainViewModel(
+                coreMLService: r.resolve(CoreMLServiceProtocol.self)!,
+                antiqueAnalyzer: r.resolve(AntiqueAnalyzerProtocol.self)!
+            )
         }
         
-        container.register(AntiqueDetailsViewModel.self) { (_, detectedImage: UIImage, initialClassification: String) in
-            // Create a new ModelContext for the details view model.
-            // This ensures that the details view model has its own context for saving,
-            // independent of the main app's context if needed.
+        container.register(AntiqueDetailsViewModel.self) { (r, detectedImage: UIImage, initialClassification: String) in
             let modelContext = ModelContext(self.modelContainer)
             return AntiqueDetailsViewModel(modelContext: modelContext, detectedImage: detectedImage, initialClassification: initialClassification)
         }
