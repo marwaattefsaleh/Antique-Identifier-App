@@ -18,8 +18,14 @@ struct AppAssembly: Assembly {
             try! CoreMLService()
         }.inObjectScope(.container)
         
-        container.register(AntiqueAnalyzerProtocol.self) { _ in
-            AntiqueAnalyzer()
+        container.register(AntiqueClassifierServiceProtocol?.self) { _ in
+            AntiqueClassifierService()
+        }.inObjectScope(.container)
+
+        container.register(AntiqueAnalyzerProtocol.self) { r in
+            AntiqueAnalyzer(
+                antiqueClassifierService: r.resolve(AntiqueClassifierServiceProtocol.self)
+            )
         }.inObjectScope(.container)
 
         container.register(MainViewModel.self) { r in

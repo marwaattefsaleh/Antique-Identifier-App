@@ -26,19 +26,14 @@ class MainViewModel: ObservableObject {
     func analyze(image: UIImage) {
         isAnalysisComplete = false
         
-        // Step 1: Classify furniture type
         do {
             let result = try coreMLService.classify(image: image)
             DispatchQueue.main.async {
                 self.classificationResult = result
                 
-                // Step 2: If it's a known furniture type, analyze if it's an antique
-                if result.furnitureType != .unknown {
-                    let analysisResult = self.antiqueAnalyzer.analyze(image: image)
-                    self.antiqueAnalysisResult = analysisResult
-                } else {
-                    self.antiqueAnalysisResult = AntiqueAnalysisResult(isAntique: false, confidence: 0, reasons: ["Could not identify furniture type."])
-                }
+                let analysisResult = self.antiqueAnalyzer.analyze(image: image, category: result.category)
+                self.antiqueAnalysisResult = analysisResult
+                
                 self.isAnalysisComplete = true
             }
         } catch {
@@ -51,30 +46,37 @@ class MainViewModel: ObservableObject {
     }
     
     var userFriendlyMessage: String {
-        guard isAnalysisComplete, let furnitureType = classificationResult?.furnitureType, furnitureType != .unknown, let analysis = antiqueAnalysisResult else {
+        guard isAnalysisComplete, let category = classificationResult?.category, category != .unknown, let analysis = antiqueAnalysisResult else {
             if isAnalysisComplete {
-                return "Could not identify as a known furniture type."
+                return "Could not identify as a known antique category."
             }
             return ""
         }
         
         let likelihood = analysis.isAntique ? "Likely" : "Unlikely"
-        let confidenceText = "Confidence: \(Int(analysis.confidence * 100))%"
+        let confidenceLevel: String
+        if analysis.confidence > 0.75 {
+            confidenceLevel = "High"
+        } else if analysis.confidence > 0.5 {
+            confidenceLevel = "Medium"
+        } else {
+            confidenceLevel = "Low"
+        }
+        let confidenceText = "Confidence: \(confidenceLevel) (\(Int(analysis.confidence * 100))%)"
         
-        return "\(likelihood) Antique \(furnitureType.rawValue.capitalized)\n\(confidenceText)"
+        return "\(likelihood) Antique \(category.rawValue.capitalized)\n\(confidenceText)"
     }
     
     var estimatedPeriod: String {
         guard let analysis = antiqueAnalysisResult, analysis.isAntique else { return "" }
-        // This is a placeholder as requested.
-        // A real implementation would require a more sophisticated model.
+        
         let confidence = analysis.confidence
         if confidence > 0.8 {
-            return "Estimated Period: 1850-1890"
+            return "Estimated Period: 18th Century"
         } else if confidence > 0.6 {
-            return "Estimated Period: 1890-1920"
+            return "Estimated Period: 18th-19th Century"
         } else {
-            return "Estimated Period: 1920-1950"
+            return "Estimated Period: 19th-20th Century"
         }
     }
 }

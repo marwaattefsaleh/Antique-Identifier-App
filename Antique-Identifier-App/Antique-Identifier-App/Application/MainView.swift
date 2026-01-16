@@ -66,7 +66,7 @@ struct MainView: View {
                                 viewModel: resolver.resolve(
                                     AntiqueDetailsViewModel.self,
                                     arguments: viewModel.image!,
-                                    viewModel.classificationResult?.furnitureType.rawValue.capitalized ?? ""
+                                    viewModel.classificationResult?.category.rawValue.capitalized ?? ""
                                 )!
                             )) {
                                 Text("View Details & Save")
