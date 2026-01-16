@@ -50,10 +50,14 @@ class CoreMLService: CoreMLServiceProtocol {
     ]
 
     init() throws {
-        guard let modelURL = Bundle.main.url(forResource: "efficientnet_lite4", withExtension: "mlmodelc") else {
+        guard let modelURL = Bundle.main.url(forResource: "MobileNetV2", withExtension: "mlmodelc") else {
             throw CoreMLError.modelLoadingFailed
         }
+        
         let compiledModel = try MLModel(contentsOf: modelURL)
+        for input in compiledModel.modelDescription.inputDescriptionsByName {
+            print("Input name: \(input.key), type: \(input.value)")
+        }
         self.model = try VNCoreMLModel(for: compiledModel)
     }
 
