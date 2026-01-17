@@ -2,12 +2,6 @@ import CoreML
 import Vision
 import UIKit
 
-enum CoreMLError: Error {
-    case modelLoadingFailed
-    case imageProcessingFailed
-    case predictionFailed
-}
-
 struct ClassificationResult {
     let category: AntiqueCategory
     let classifications: [String: Double]
@@ -70,8 +64,8 @@ class CoreMLService: CoreMLServiceProtocol {
         var classifications: [String: Double] = [:]
         let request = VNCoreMLRequest(model: model) { (request, error) in
             if let results = request.results as? [VNClassificationObservation] {
-                // Take top 5
-                let topResults = results.prefix(5)
+                // Sort by confidence and take top 5
+                let topResults = results.sorted { $0.confidence > $1.confidence }.prefix(5)
                 for classification in topResults {
                     // ImageNet labels often have multiple parts, e.g., "dining table, board"
                     let primaryLabel = classification.identifier.components(separatedBy: ",")[0]

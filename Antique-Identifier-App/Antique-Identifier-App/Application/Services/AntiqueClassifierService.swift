@@ -2,6 +2,12 @@ import CoreML
 import Vision
 import UIKit
 
+enum CoreMLError: Error {
+    case modelLoadingFailed
+    case imageProcessingFailed
+    case predictionFailed
+}
+
 struct BinaryClassificationResult {
     let isAntique: Bool
     let confidence: Double

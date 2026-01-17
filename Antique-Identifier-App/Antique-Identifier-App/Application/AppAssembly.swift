@@ -24,7 +24,8 @@ struct AppAssembly: Assembly {
 
         container.register(AntiqueAnalyzerProtocol.self) { r in
             AntiqueAnalyzer(
-                antiqueClassifierService: r.resolve(AntiqueClassifierServiceProtocol.self)
+                antiqueClassifierService: r.resolve(AntiqueClassifierServiceProtocol.self),
+                coreMLService: r.resolve(CoreMLServiceProtocol.self)! // Provide CoreMLService
             )
         }.inObjectScope(.container)
 
@@ -35,9 +36,9 @@ struct AppAssembly: Assembly {
             )
         }
         
-        container.register(AntiqueDetailsViewModel.self) { (r, detectedImage: UIImage, initialClassification: String) in
+        container.register(AntiqueDetailsViewModel.self) { (r, image: UIImage?, result: CombinedAnalysisResult) in
             let modelContext = ModelContext(self.modelContainer)
-            return AntiqueDetailsViewModel(modelContext: modelContext, detectedImage: detectedImage, initialClassification: initialClassification)
+            return AntiqueDetailsViewModel(modelContext: modelContext, image: image, result: result)
         }
     }
 }

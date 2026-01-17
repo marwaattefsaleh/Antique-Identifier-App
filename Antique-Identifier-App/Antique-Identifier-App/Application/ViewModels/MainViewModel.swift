@@ -3,8 +3,7 @@ import Combine
 
 class MainViewModel: ObservableObject {
     @Published var image: UIImage?
-    @Published var classificationResult: ClassificationResult?
-    @Published var antiqueAnalysisResult: AntiqueAnalysisResult?
+    @Published var combinedResult: CombinedAnalysisResult?
     @Published var isAnalysisComplete: Bool = false
     
     private let coreMLService: CoreMLServiceProtocol
@@ -25,58 +24,39 @@ class MainViewModel: ObservableObject {
     
     func analyze(image: UIImage) {
         isAnalysisComplete = false
+        combinedResult = nil // Reset previous result
         
         do {
-            let result = try coreMLService.classify(image: image)
+            let classificationResult = try coreMLService.classify(image: image)
+            let antiqueAnalysisResult = self.antiqueAnalyzer.analyze(image: image, category: classificationResult.category)
+            
             DispatchQueue.main.async {
-                self.classificationResult = result
+                // Get the top confidence from MobileNet's classifications
+                let topMobileNetConfidence = classificationResult.classifications.values.max() ?? 0.0
                 
-                let analysisResult = self.antiqueAnalyzer.analyze(image: image, category: result.category)
-                self.antiqueAnalysisResult = analysisResult
+                // Determine the final confidence
+                let finalConfidence = max(antiqueAnalysisResult.confidence, topMobileNetConfidence)
+                let isAntiqueFinal = finalConfidence > 0.5 // Make isAntique depend on the final confidence
+
+                self.combinedResult = CombinedAnalysisResult(
+                    isAntique: isAntiqueFinal, // Use the new isAntique
+                    confidence: finalConfidence, // Use the higher confidence
+                    reasons: antiqueAnalysisResult.reasons,
+                    category: classificationResult.category,
+                    classifications: classificationResult.classifications
+                )
                 
+                print("Marwa: \(antiqueAnalysisResult.confidence)")
+                print("Marwa: \(classificationResult)")
+
                 self.isAnalysisComplete = true
             }
         } catch {
             print("Error analyzing image: \(error)")
             DispatchQueue.main.async {
-                self.antiqueAnalysisResult = AntiqueAnalysisResult(isAntique: false, confidence: 0, reasons: ["Failed to analyze image."])
+                // You might want to create a CombinedAnalysisResult for the error case as well
                 self.isAnalysisComplete = true
             }
-        }
-    }
-    
-    var userFriendlyMessage: String {
-        guard isAnalysisComplete, let category = classificationResult?.category, category != .unknown, let analysis = antiqueAnalysisResult else {
-            if isAnalysisComplete {
-                return "Could not identify as a known antique category."
-            }
-            return ""
-        }
-        
-        let likelihood = analysis.isAntique ? "Likely" : "Unlikely"
-        let confidenceLevel: String
-        if analysis.confidence > 0.75 {
-            confidenceLevel = "High"
-        } else if analysis.confidence > 0.5 {
-            confidenceLevel = "Medium"
-        } else {
-            confidenceLevel = "Low"
-        }
-        let confidenceText = "Confidence: \(confidenceLevel) (\(Int(analysis.confidence * 100))%)"
-        
-        return "\(likelihood) Antique \(category.rawValue.capitalized)\n\(confidenceText)"
-    }
-    
-    var estimatedPeriod: String {
-        guard let analysis = antiqueAnalysisResult, analysis.isAntique else { return "" }
-        
-        let confidence = analysis.confidence
-        if confidence > 0.8 {
-            return "Estimated Period: 18th Century"
-        } else if confidence > 0.6 {
-            return "Estimated Period: 18th-19th Century"
-        } else {
-            return "Estimated Period: 19th-20th Century"
         }
     }
 }
